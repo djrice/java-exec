@@ -1,0 +1,59 @@
+<project name="java-exec" default="jar">
+
+  <path id="build-dependencies">
+    <fileset file="lib/*.jar" />
+  </path>
+
+  <target name="init">
+    <delete dir="target" />
+    <mkdir dir="target/prod/classes" />
+    <mkdir dir="target/test/classes" />
+    <mkdir dir="target/dist" />
+    <mkdir dir="target/reports/xml/junit" />
+    <mkdir dir="dist" />
+  </target>
+
+  <target name="compile" depends="init">
+    <javac debug="true" destdir="target/prod/classes" compiler="javac1.5" encoding="UTF-8">
+      <src path="src" />
+      <classpath refid="build-dependencies" />      
+    </javac>
+  </target>
+
+  <target  name="compile-test" depends="compile">
+    <javac debug="true" destdir="target/test/classes" compiler="javac1.5" encoding="UTF-8">
+      <src  path="test" />
+      <classpath path="target/prod/classes" />
+      <classpath refid="build-dependencies" />
+    </javac>
+  </target>
+
+  <target  name="test" depends="compile-test">
+
+    <echo message="${basedir}/../log4j.properties" />
+
+    <junit fork="yes" dir="${basedir}/.." forkmode="once" showoutput="true" printsummary="on" failureproperty="build-failed">      
+      <classpath>
+        <path  refid="build-dependencies" />
+        <path location="target/prod/classes" />
+        <path location="target/test/classes" />
+      </classpath>
+
+      <formatter type="plain" usefile="false" />
+      <formatter type="xml" />
+
+      <batchtest todir="target/reports/xml/junit">
+        <fileset dir="test">
+          <include name="**/*Test.java" />
+        </fileset>
+      </batchtest>
+    </junit>
+    <fail if="build-failed" message="Build halted due to failed tests!"/>    
+  </target>
+  
+
+  <target name="jar" depends="test">
+    <jar basedir="target/prod/classes" jarfile="dist/java-exec-1.0.jar" />
+  </target>
+  
+</project>     

@@ -1,0 +1,51 @@
+## What? ##
+
+
+A simple library for executing a subprocess from within a Java program.
+
+java-exec provides:
+* Simple capture of output as a string
+* Handling output as streaming lines
+* Piping the output to another stream
+* Error capture
+* Subprocess timeout
+
+
+## Examples ##
+
+### Simple output capture ###
+
+    CommandExecutor executor = new CommandExecutor(Arrays.asList("ls"));
+    String dirContents = executor.run();
+    System.out.println(dirContents);
+    
+
+### Process output as lines ###
+
+    CommandExecutor executor = new CommandExecutor(Arrays.asList("ls"));
+    executor.run(new LineHandler() {
+      public void handleLine(String line) {
+        System.out.println(line);
+      }
+    });
+
+
+### Stream output ###
+
+    CommandExecutor executor = new CommandExecutor(Arrays.asList("ls"));
+    executor.run(System.out);
+
+
+### Subprocess timeout ###
+
+    long cmdTimeout = 3000; // 3 seconds
+    CommandExecutor executor = new CommandExecutor(Arrays.asList("sleep", "5"), cmdTimeout);
+    try {
+      executor.run();
+    } catch (CommandExecutorException e) {
+      System.out.println("Caught exception: " + e.getMessage());
+      // handle timeout if you like, however
+      // CommandExecutorException extends RuntimeException, so
+      // you can also let it kill your program if the
+      // scenario cannot reasonably be handled
+    }
