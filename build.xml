@@ -14,14 +14,14 @@
   </target>
 
   <target name="compile" depends="init">
-    <javac debug="true" destdir="target/prod/classes" compiler="javac1.5" encoding="UTF-8">
+    <javac debug="true" destdir="target/prod/classes" compiler="javac1.5" encoding="UTF-8" includeantruntime="false">
       <src path="src" />
       <classpath refid="build-dependencies" />      
     </javac>
   </target>
 
   <target  name="compile-test" depends="compile">
-    <javac debug="true" destdir="target/test/classes" compiler="javac1.5" encoding="UTF-8">
+    <javac debug="true" destdir="target/test/classes" compiler="javac1.5" encoding="UTF-8" includeantruntime="false">
       <src  path="test" />
       <classpath path="target/prod/classes" />
       <classpath refid="build-dependencies" />
@@ -30,9 +30,7 @@
 
   <target  name="test" depends="compile-test">
 
-    <echo message="${basedir}/../log4j.properties" />
-
-    <junit fork="yes" dir="${basedir}/.." forkmode="once" showoutput="true" printsummary="on" failureproperty="build-failed">      
+    <junit fork="yes" dir="${basedir}" forkmode="once" showoutput="true" printsummary="on" failureproperty="build-failed">
       <classpath>
         <path  refid="build-dependencies" />
         <path location="target/prod/classes" />
@@ -53,7 +51,7 @@
   
 
   <target name="jar" depends="test">
-    <jar basedir="target/prod/classes" jarfile="dist/java-exec-1.0.jar" />
+    <jar basedir="target/prod/classes" jarfile="dist/java-exec-1.0.1.jar" />
   </target>
   
 </project>     

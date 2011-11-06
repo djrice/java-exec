@@ -34,6 +34,10 @@ public class TestProgram {
       OutputStreamWriter writer = new OutputStreamWriter(System.out, "UTF-8");
       writer.write("这是中文");
       writer.flush();
+    } else if (args[0].equals("pwd")) {
+      OutputStreamWriter writer = new OutputStreamWriter(System.out, "UTF-8");
+      writer.write(System.getProperty("user.dir"));
+      writer.flush();
     }
   }
 }
