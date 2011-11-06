@@ -2,10 +2,7 @@
 
 package com.thoughtworks.studios.javaexec;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.List;
 
 public class CommandExecutor {
@@ -14,37 +11,48 @@ public class CommandExecutor {
   private String standardErrorText;
   private int returnCode;
   private Long timeout;
+  private String workingDirectory;
 
   public CommandExecutor(List<String> cmd) {
-    this(cmd, null);
+    this(cmd, null, null);
   }
 
   public CommandExecutor(List<String> cmd, Long timeout) {
+    this(cmd, timeout, null);
+  }
+
+  public CommandExecutor(List<String> cmd, String workingDirectory) {
+    this(cmd, null, workingDirectory);
+  }
+
+  public CommandExecutor(List<String> cmd, Long timeout, String workingDirectory) {
     this.cmd = cmd;
     this.timeout = timeout;
+    this.workingDirectory = workingDirectory;
   }
 
   public void run(OutputStream outputStream) {
     try {
-      Process process = new ProcessBuilder(cmd).start();
-      PipeRunnable pipeRunnable = new StreamPipeRunnable(process.getInputStream(), outputStream);
-      Pipe pipe = new Pipe(pipeRunnable);
-      captureOutput(process, pipe);
+      Process process = launchProcess();
+      captureOutput(process, new StreamPipeRunnable(process.getInputStream(), outputStream));
     } catch (IOException ioEx) {
       throw new CommandExecutorException("Command execution failed unexpectedly!", ioEx);
     }
   }
 
-
   public void run(LineHandler out) {
     try {
-      Process process = new ProcessBuilder(cmd).start();
-      PipeRunnable pipeRunnable = new LinePipeRunnable(process.getInputStream(), out);
-      Pipe pipe = new Pipe(pipeRunnable);
-      captureOutput(process, pipe);
+      Process process = launchProcess();
+      captureOutput(process, new LinePipeRunnable(process.getInputStream(), out));
     } catch (IOException ioEx) {
       throw new CommandExecutorException("Command execution failed unexpectedly!", ioEx);
     }
+  }
+
+  private Process launchProcess() throws IOException {
+    ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+    if (workingDirectory != null) processBuilder.directory(new File(workingDirectory));
+    return processBuilder.start();
   }
 
   public String run() {
@@ -69,8 +77,9 @@ public class CommandExecutor {
     return returnCode != 0;
   }
 
-  private void captureOutput(Process process, Pipe pipe) {
+  private void captureOutput(Process process, PipeRunnable pipeRunnable) {
     try {
+      Pipe pipe = new Pipe(pipeRunnable);
       ByteArrayOutputStream errorOutput = new ByteArrayOutputStream();
       StreamPipeRunnable errorPipeRunnable = new StreamPipeRunnable(process.getErrorStream(), errorOutput);
       Pipe errorPipe = new Pipe(errorPipeRunnable);
