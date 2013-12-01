@@ -100,8 +100,6 @@ public class CommandExecutor {
 
       process.destroy();
 
-      //standardErrorText = errorOutput.toString(); // outputs to outputStream while running
-
     } catch (InterruptedException intEx) {
       throw new CommandExecutorException("Command execution failed unexpectedly!", intEx);
     }
