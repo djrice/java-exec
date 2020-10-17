@@ -3,6 +3,7 @@
 package com.thoughtworks.studios.javaexec;
 
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 
 public class TestProgram {
 
@@ -12,32 +13,39 @@ public class TestProgram {
     cmd[1] = "-cp";
     cmd[2] = System.getProperty("java.class.path");
     cmd[3] = TestProgram.class.getName();
-    for (int i = 4; i < cmd.length; i++) {
-      cmd[i] = args[i - 4];
-    }
+    System.arraycopy(args, 0, cmd, 4, cmd.length - 4);
     return cmd;
   }
 
   public static void main(String[] args) throws Exception {
-    if (args[0].equals("sleep")) {
-      Thread.sleep(Integer.valueOf(args[1]));
-    } else if (args[0].equals("echo")) {
-      OutputStreamWriter writer = new OutputStreamWriter(System.out, "UTF-8");
-      writer.write(args[1]);
-      writer.flush();
-    } else if (args[0].equals("error")) {
-      OutputStreamWriter writer = new OutputStreamWriter(System.err, "UTF-8");
-      writer.write(args[1]);
-      writer.flush();
-      System.exit(Integer.valueOf(args[2]));
-    } else if (args[0].equals("chinese")) {
-      OutputStreamWriter writer = new OutputStreamWriter(System.out, "UTF-8");
-      writer.write("这是中文");
-      writer.flush();
-    } else if (args[0].equals("pwd")) {
-      OutputStreamWriter writer = new OutputStreamWriter(System.out, "UTF-8");
-      writer.write(System.getProperty("user.dir"));
-      writer.flush();
+    switch (args[0]) {
+      case "sleep":
+        Thread.sleep(Integer.parseInt(args[1]));
+        break;
+      case "echo": {
+        OutputStreamWriter writer = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
+        writer.write(args[1]);
+        writer.flush();
+        break;
+      }
+      case "error": {
+        OutputStreamWriter writer = new OutputStreamWriter(System.err, StandardCharsets.UTF_8);
+        writer.write(args[1]);
+        writer.flush();
+        System.exit(Integer.parseInt(args[2]));
+      }
+      case "chinese": {
+        OutputStreamWriter writer = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
+        writer.write("这是中文");
+        writer.flush();
+        break;
+      }
+      case "pwd": {
+        OutputStreamWriter writer = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
+        writer.write(System.getProperty("user.dir"));
+        writer.flush();
+        break;
+      }
     }
   }
 }

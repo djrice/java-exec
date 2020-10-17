@@ -24,10 +24,8 @@ public class PipeTest {
   @Test
   public void capturesIOException() throws Exception {
     final IOException expectedException = new IOException("Fake IO Exception!");
-    PipeRunnable runnable = new PipeRunnable() {
-      public void run() throws IOException {
-        throw expectedException;
-      }
+    PipeRunnable runnable = () -> {
+      throw expectedException;
     };
     Pipe pipe = new Pipe(runnable);
     pipe.start();
@@ -37,11 +35,11 @@ public class PipeTest {
     assertThat(pipe.exception(), equalTo(expectedException));
   }
 
-  class TestPipeRunnable implements PipeRunnable {
+  static class TestPipeRunnable implements PipeRunnable {
 
     private boolean runExecuted = false;
 
-    public void run() throws IOException {
+    public void run() {
       runExecuted = true;
     }
 

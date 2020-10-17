@@ -9,7 +9,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 public class TestLineHandler implements LineHandler {
-  private List<String> lines = new ArrayList<String>();
+  private final List<String> lines = new ArrayList<>();
 
   public void handleLine(String line) {
     lines.add(line);

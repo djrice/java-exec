@@ -6,7 +6,6 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -89,22 +88,22 @@ public class CommandExecutorTest {
   }
 
   @Test
-  public void captureChineseOutputWhenNotStreaming() throws Exception {
+  public void captureChineseOutputWhenNotStreaming() {
     String[] cmd = TestProgram.cmdFor(new String[]{"chinese"});
     CommandExecutor exec = new CommandExecutor(Arrays.asList(cmd));
     assertThat(exec.run(), equalTo("这是中文"));
   }
 
   @Test
-  public void canSetWorkingDirectory() throws Exception {
+  public void canSetWorkingDirectory() {
     File workingDir = new File(System.getProperty("user.dir"), "temp-sub-dir-for-canSetWorkingDirectory");
-    workingDir.mkdir();
+    assertTrue(workingDir.mkdir());
     try {
       String[] cmd = TestProgram.cmdFor(new String[]{"pwd"});
       CommandExecutor exec = new CommandExecutor(Arrays.asList(cmd), workingDir.getPath());
       assertTrue(exec.run().endsWith(workingDir.getPath()));
     } finally {
-      workingDir.delete();
+      assertTrue(workingDir.delete());
     }
   }
 
