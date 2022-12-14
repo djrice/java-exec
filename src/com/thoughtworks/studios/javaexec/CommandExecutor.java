@@ -8,7 +8,6 @@ import java.util.List;
 public class CommandExecutor {
 
   private List<String> cmd;
-  private String standardErrorText;
   private int returnCode;
   private Long timeout;
   private String workingDirectory;
@@ -34,7 +33,7 @@ public class CommandExecutor {
   public void run(OutputStream outputStream) {
     try {
       Process process = launchProcess();
-      captureOutput(process, new StreamPipeRunnable(process.getInputStream(), outputStream));
+      captureOutput(process, new StreamPipeRunnable(process.getInputStream(), outputStream), new StreamPipeRunnable(process.getErrorStream(), outputStream));
     } catch (IOException ioEx) {
       throw new CommandExecutorException("Command execution failed unexpectedly!", ioEx);
     }
@@ -43,7 +42,7 @@ public class CommandExecutor {
   public void run(LineHandler out) {
     try {
       Process process = launchProcess();
-      captureOutput(process, new LinePipeRunnable(process.getInputStream(), out));
+      captureOutput(process, new LinePipeRunnable(process.getInputStream(), out), new LinePipeRunnable(process.getErrorStream(), out));
     } catch (IOException ioEx) {
       throw new CommandExecutorException("Command execution failed unexpectedly!", ioEx);
     }
@@ -65,10 +64,6 @@ public class CommandExecutor {
     }
   }
 
-  public String standardErrorText() {
-    return standardErrorText;
-  }
-
   public int returnCode() {
     return returnCode;
   }
@@ -77,11 +72,9 @@ public class CommandExecutor {
     return returnCode != 0;
   }
 
-  private void captureOutput(Process process, PipeRunnable pipeRunnable) {
+  private void captureOutput(Process process, PipeRunnable pipeRunnable, PipeRunnable errorPipeRunnable) {
     try {
       Pipe pipe = new Pipe(pipeRunnable);
-      ByteArrayOutputStream errorOutput = new ByteArrayOutputStream();
-      StreamPipeRunnable errorPipeRunnable = new StreamPipeRunnable(process.getErrorStream(), errorOutput);
       Pipe errorPipe = new Pipe(errorPipeRunnable);
 
       ProcessWatcher watcher = null;
@@ -106,8 +99,6 @@ public class CommandExecutor {
       }
 
       process.destroy();
-
-      standardErrorText = errorOutput.toString();
 
     } catch (InterruptedException intEx) {
       throw new CommandExecutorException("Command execution failed unexpectedly!", intEx);
