@@ -9,6 +9,7 @@ public class CommandExecutor {
 
   private List<String> cmd;
   private String standardErrorText;
+  private boolean noStandardErrorTextHere;
   private int returnCode;
   private Long timeout;
   private String workingDirectory;
@@ -40,10 +41,34 @@ public class CommandExecutor {
     }
   }
 
+  public void run(OutputStream outputStream, OutputStream errorOutputStream) {
+    try {
+      Process process = launchProcess();
+      captureBothOutput(process,
+              new StreamPipeRunnable(process.getInputStream(), outputStream),
+              new StreamPipeRunnable(process.getErrorStream(), errorOutputStream)
+      );
+    } catch (IOException ioEx) {
+      throw new CommandExecutorException("Command execution failed unexpectedly!");
+    }
+  }
+
   public void run(LineHandler out) {
     try {
       Process process = launchProcess();
       captureOutput(process, new LinePipeRunnable(process.getInputStream(), out));
+    } catch (IOException ioEx) {
+      throw new CommandExecutorException("Command execution failed unexpectedly!", ioEx);
+    }
+  }
+
+  public void run(LineHandler out, LineHandler err) {
+    try {
+      Process process = launchProcess();
+      captureBothOutput(process,
+              new LinePipeRunnable(process.getInputStream(), out),
+              new LinePipeRunnable(process.getErrorStream(), err)
+      );
     } catch (IOException ioEx) {
       throw new CommandExecutorException("Command execution failed unexpectedly!", ioEx);
     }
@@ -66,6 +91,9 @@ public class CommandExecutor {
   }
 
   public String standardErrorText() {
+    if (noStandardErrorTextHere) {
+      throw new IllegalStateException("The standard error text were already taken somewhere else!");
+    }
     return standardErrorText;
   }
 
@@ -78,12 +106,20 @@ public class CommandExecutor {
   }
 
   private void captureOutput(Process process, PipeRunnable pipeRunnable) {
-    try {
-      Pipe pipe = new Pipe(pipeRunnable);
       ByteArrayOutputStream errorOutput = new ByteArrayOutputStream();
       StreamPipeRunnable errorPipeRunnable = new StreamPipeRunnable(process.getErrorStream(), errorOutput);
-      Pipe errorPipe = new Pipe(errorPipeRunnable);
 
+      captureBothOutput(process, pipeRunnable, errorPipeRunnable);
+
+      standardErrorText = errorOutput.toString();
+      noStandardErrorTextHere = false;
+  }
+
+  private void captureBothOutput(Process process, PipeRunnable pipeRunnable, PipeRunnable errorPipeRunnable) {
+    Pipe pipe = new Pipe(pipeRunnable);
+    Pipe errorPipe = new Pipe(errorPipeRunnable);
+
+    try {
       ProcessWatcher watcher = null;
       if (timeout != null) {
         watcher = new ProcessWatcher(process, timeout);
@@ -106,8 +142,7 @@ public class CommandExecutor {
       }
 
       process.destroy();
-
-      standardErrorText = errorOutput.toString();
+      noStandardErrorTextHere = true;
 
     } catch (InterruptedException intEx) {
       throw new CommandExecutorException("Command execution failed unexpectedly!", intEx);
