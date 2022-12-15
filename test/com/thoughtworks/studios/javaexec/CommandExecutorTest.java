@@ -26,6 +26,17 @@ public class CommandExecutorTest {
   }
 
   @Test
+  public void captureOutputWhenStreamingToOutputStreamAndErrorOutputStream() {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream errorOutputStream = new ByteArrayOutputStream();
+    String[] cmd = TestProgram.cmdFor(new String[]{"echo", "foobar"});
+    CommandExecutor exec = new CommandExecutor(Arrays.asList(cmd));
+    exec.run(outputStream, errorOutputStream);
+    assertThat(outputStream.toString(), equalTo("foobar"));
+    assertThat(errorOutputStream.toString(), equalTo(""));
+  }
+
+  @Test
   public void captureErrorWhenStreamingToOutputStream() {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     String[] cmd = TestProgram.cmdFor(new String[]{"error", "something went wrong", "173"});
@@ -35,6 +46,48 @@ public class CommandExecutorTest {
     assertThat(exec.isError(), equalTo(true));
     assertThat(exec.standardErrorText(), equalTo("something went wrong"));
     assertThat(exec.returnCode(), equalTo(173));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void captureErrorButNotWithStandardErrorTextWhenStreamingToOutputStreamAndErrorOutputStream() {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream errorOutputStream = new ByteArrayOutputStream();
+    String[] cmd = TestProgram.cmdFor(new String[]{"error", "something went wrong", "173"});
+    CommandExecutor exec = new CommandExecutor(Arrays.asList(cmd));
+    exec.run(outputStream, errorOutputStream);
+
+    assertThat(exec.isError(), equalTo(true));
+    assertThat(errorOutputStream.toString(), equalTo("something went wrong"));
+    assertThat(exec.returnCode(), equalTo(173));
+    // boom
+    exec.standardErrorText();
+  }
+
+  @Test
+  public void captureErrorWhenStreamingToOutputStreamAndErrorOutputStream() {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream errorOutputStream = new ByteArrayOutputStream();
+    String[] cmd = TestProgram.cmdFor(new String[]{"error", "something went wrong", "173"});
+    CommandExecutor exec = new CommandExecutor(Arrays.asList(cmd));
+    exec.run(outputStream, errorOutputStream);
+
+    assertThat(exec.isError(), equalTo(true));
+    assertThat(errorOutputStream.toString(), equalTo("something went wrong"));
+    assertThat(exec.returnCode(), equalTo(173));
+  }
+
+  @Test
+  public void captureOutputAndErrorWhenStreamingToOutputStreamAndErrorOutputStream() {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream errorOutputStream = new ByteArrayOutputStream();
+    String[] cmd = TestProgram.cmdFor(new String[]{"tee", "something went both to stdout and stderr"});
+    CommandExecutor exec = new CommandExecutor(Arrays.asList(cmd));
+    exec.run(outputStream, errorOutputStream);
+
+    assertThat(exec.isError(), equalTo(false));
+    assertThat(outputStream.toString(), equalTo("something went both to stdout and stderr"));
+    assertThat(errorOutputStream.toString(), equalTo("something went both to stdout and stderr"));
+    assertThat(exec.returnCode(), equalTo(0));
   }
 
   @Test
