@@ -34,6 +34,15 @@ public class TestProgram {
         writer.flush();
         System.exit(Integer.parseInt(args[2]));
       }
+      case "tee": {
+        OutputStreamWriter outWriter = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
+        OutputStreamWriter errWriter = new OutputStreamWriter(System.err, StandardCharsets.UTF_8);
+        outWriter.write(args[1]);
+        errWriter.write(args[1]);
+        outWriter.flush();
+        errWriter.flush();
+        break;
+      }
       case "chinese": {
         OutputStreamWriter writer = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
         writer.write("这是中文");
